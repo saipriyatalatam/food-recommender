@@ -272,7 +272,7 @@ def get_recommendations(input_food, selected_features=settings.SELECTED_FEATURES
     if len(recommendations) < 3:
         raise ValueError(f"Not enough recommendations for '{input_food}' to build subsets.")
 
-    unique_subsets = list(combinations(recommendations, 3))
+    unique_subsets = list(combinations(recommendations, 3))    #120 subsets
     all_food_subsets = {input_food: [[f"Subset {i+1}", *subset] for i, subset in enumerate(unique_subsets)]}
 
     # Step 4: Score all subsets
@@ -312,19 +312,32 @@ def get_recommendations(input_food, selected_features=settings.SELECTED_FEATURES
             relevance_score = (ed_score + cost_score) / diversity_score if diversity_score > 0 else 0
             relevance_scores.append(relevance_score)
 
-        # Step 5: Select best subset
-        best_index = np.argmin(relevance_scores)
-        best_subset = subsets[best_index]
-        best_recommendations.append([
-            food_item,
-            *best_subset,
-            ed_results[best_index],
-            diversity_results[best_index],
-            cost_results[best_index],
-            relevance_scores[best_index]
-        ])
+                # Step 5: Select top 4 subsets based on relevance scores
+        print(relevance_scores)
+        sorted_indices = np.argsort(relevance_scores)  # Returns indices from best to worst
+        print("sorted_indices", sorted_indices)
 
-    return {
-        "input_food": input_food,
-        "best_recommendation": best_recommendations
-    }
+        # Get top 4 subsets (or fewer if there aren't 4 available)
+        top_subsets = []
+        for i in range(min(4, len(sorted_indices))):  # Ensure we don't exceed available subsets
+            idx = sorted_indices[i]
+            top_subsets.append({
+                'rank': i + 1,  # 1st, 2nd, 3rd, 4th
+                'subset': subsets[idx],
+                'ed_score': ed_results[idx],
+                'diversity_score': diversity_results[idx],
+                'cost_score': cost_results[idx],
+                'relevance_score': relevance_scores[idx]
+            })
+
+        # Store all top recommendations
+        best_recommendations.append({
+            'food_item': food_item,
+            'top_subsets': top_subsets
+        })
+        # print(best_recommendations)
+
+        return {
+            "input_food": input_food,
+            "recommendations": best_recommendations  # Now contains top 4 subsets for each food
+        }
