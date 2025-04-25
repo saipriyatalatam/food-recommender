@@ -29,4 +29,6 @@ urlpatterns = [
     path('search/', views.search_results, name='search_results'),
     path('recommendations/<str:food_name>/', views.recommendations_view, name='recommendations'),
     path('submit_rating/', views.submit_rating, name='submit_rating'),
+    path('recommendations/<str:food_name>/', views.recommendations_view, name='recommendations'),
+    path('recommendations/<str:food_name>/alternate/', views.alternate_recommendations_view, name='alternate_recommendations'),
 ]
