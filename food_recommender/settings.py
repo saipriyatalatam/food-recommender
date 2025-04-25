@@ -29,6 +29,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['food-recommender-4tko.onrender.com']
 
+ALLOWED_HOSTS = ['https://food-recommender-vqtg.onrender.com']
 
 # Application definition
 
