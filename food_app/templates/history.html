@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}Recommendation History{% endblock %}
+
+{% block content %}
+<!-- Main card container with some padding and shadow for a clean UI -->
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Recommendation History</h2>
+
+    {% if history %}
+        <!-- If there's any recommendation history, loop through each item -->
+        <ul class="list-group">
+            {% for item in history %}
+                <li class="list-group-item">
+                    <!-- Display the food item that was originally selected -->
+                    <p><strong>Selected:</strong> {{ item.selected_food.food_name }}</p>
+
+                    <!-- Show the three recommended food items -->
+                    <p><strong>Recommended:</strong></p>
+                    <ul class="list-unstyled">
+                        <!-- Recommended item 1 -->
+                        <li class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>{{ item.recommended_food_1.food_name }}</span>
+                                <!-- Show a disabled slider representing the rating for this recommendation -->
+                                <div class="d-flex align-items-center gap-3" style="width: 300px;">
+                                    <input type="range" value="{{ item.rating_1 }}" min="0" max="5" step="0.5" 
+                                           class="form-range rating-slider" disabled>
+                                    <span class="text-muted">{{ item.rating_1 }}</span>
+                                </div>
+                            </div>
+                        </li>
+                        <!-- Recommended item 2 -->
+                        <li class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>{{ item.recommended_food_2.food_name }}</span>
+                                <div class="d-flex align-items-center gap-3" style="width: 300px;">
+                                    <input type="range" value="{{ item.rating_2 }}" min="0" max="5" step="0.5" 
+                                           class="form-range rating-slider" disabled>
+                                    <span class="text-muted">{{ item.rating_2 }}</span>
+                                </div>
+                            </div>
+                        </li>
+                        <!-- Recommended item 3 -->
+                        <li class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>{{ item.recommended_food_3.food_name }}</span>
+                                <div class="d-flex align-items-center gap-3" style="width: 300px;">
+                                    <input type="range" value="{{ item.rating_3 }}" min="0" max="5" step="0.5" 
+                                           class="form-range rating-slider" disabled>
+                                    <span class="text-muted">{{ item.rating_3 }}</span>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <!-- Show when this recommendation was made -->
+                    <small class="text-muted">{{ item.created_at }}</small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <!-- If no history is found, show a simple message -->
+        <p>No recommendations yet.</p>
+    {% endif %}
+</div>
+
+<!-- Inline styles for customizing the slider appearance -->
+<style>
+    .rating-slider {
+        --track-height: 8px;
+        --thumb-size: 20px;
+        background: transparent;
+    }
+
+    /* Styling for the slider track in modern browsers */
+    .rating-slider::-webkit-slider-runnable-track {
+        height: var(--track-height);
+        background: linear-gradient(90deg, 
+            red 0%,        /* Lower ratings start with red */
+            #ffd700 60%,   /* Yellow for mid-range ratings */
+            green 100%);   /* Green for high ratings */
+        border-radius: 4px;
+    }
+
+    /* Thumb (slider knob) styling */
+    .rating-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: var(--thumb-size);
+        height: var(--thumb-size);
+        background: #ffffff;
+        border: 2px solid #666;
+        border-radius: 50%;
+        margin-top: calc((var(--thumb-size) - var(--track-height)) / -2);
+    }
+
+    /* Make sure disabled sliders still look visible and behave correctly */
+    .rating-slider:disabled {
+        opacity: 1;
+    }
+
+    .rating-slider:disabled::-webkit-slider-thumb,
+    .rating-slider:disabled::-moz-range-thumb {
+        cursor: default;
+    }
+</style>
+{% endblock %}

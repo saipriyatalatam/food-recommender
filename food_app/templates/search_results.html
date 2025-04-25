@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Search Results{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Results for "{{ query }}"</h2>
+    {% if food_items %}
+        <ul class="list-group">
+            {% for item in food_items %}
+                <li class="list-group-item">
+                    <a href="{% url 'recommendations' item.food_name %}">{{ item.food_name }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No results found.</p>
+    {% endif %}
+</div>
+{% endblock %}

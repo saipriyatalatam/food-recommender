@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card shadow-sm p-4">
+    <!-- Heading for the search functionality -->
+    <h2 class="mb-4">Search Food Items</h2>
+    
+    <!-- Form to handle the search input -->
+    <form method="get" action="{% url 'search_results' %}" class="mb-4">
+        <div class="mb-3 position-relative">
+            <!-- Input field for the search query -->
+            <input type="text" id="search_input" class="form-control" placeholder="Search..." name="q" autocomplete="off">
+            
+            <!-- Div that will display the autocomplete suggestions -->
+            <div id="autocomplete_results" class="list-group mt-1" style="display: none; position: absolute; width: 100%; z-index: 1000;"></div>
+        </div>
+        
+        <!-- Submit button for the search form -->
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
+    <!-- Section for selecting food by group -->
+    <h2 class="mb-4">Select by Food Group</h2>
+    <form method="get" class="mb-4">
+        <div class="mb-3">
+            <label for="food_group" class="form-label">Food Group</label>
+            <select name="food_group" id="food_group" class="form-select" onchange="this.form.submit()">
+                <!-- Default option -->
+                <option value="">Select a group</option>
+                
+                <!-- Loop through available food groups and create an option for each -->
+                {% for group in food_groups %}
+                    <option value="{{ group.food_group }}" {% if group.food_group == selected_group %}selected{% endif %}>{{ group.food_group }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    <!-- If a food group is selected, show the food item selection form -->
+    {% if selected_group %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="food_item" class="form-label">Food Item</label>
+                <select name="food_item" id="food_item" class="form-select" required>
+                    <!-- Default option -->
+                    <option value="">Select a food</option>
+                    
+                    <!-- Loop through food items of the selected group and create an option for each -->
+                    {% for item in food_items %}
+                        <option value="{{ item.food_name }}">{{ item.food_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Submit button for getting recommendations based on the selected food item -->
+            <button type="submit" class="btn btn-primary">Get Recommendations</button>
+        </form>
+    {% endif %}
+</div>
+
+<!-- JavaScript to handle search input and autocomplete functionality -->
+<script>
+document.getElementById('search_input').addEventListener('input', function(e) {
+
+    const query = e.target.value.trim();
+    const resultsDiv = document.getElementById('autocomplete_results');
+    
+    // If the query is less than 1 characters long, hide the autocomplete suggestions
+    if (query.length < 1) {
+        resultsDiv.style.display = 'none';
+        return; 
+    }
+
+    // AJAX request to the autocomplete endpoint
+    fetch(`/autocomplete/?q=${encodeURIComponent(query)}`)
+        .then(response => response.json()) // Parse the response as JSON
+        .then(data => {
+            // Clear any previous suggestions in the results div
+            resultsDiv.innerHTML = '';
+
+            // If the server returned suggestions, create a clickable list of results
+            if (data.length) {
+                data.forEach(item => {
+                    const link = document.createElement('a'); // Create a new anchor element for each suggestion
+                    link.href = `/recommendations/${encodeURIComponent(item)}/`; // Link to the recommendations page for the item
+                    link.className = 'list-group-item list-group-item-action'; // Apply Bootstrap styling to the link
+                    link.textContent = item; 
+                    resultsDiv.appendChild(link); // Append the link to the results div
+                });
+                resultsDiv.style.display = 'block'; // Show the autocomplete suggestions
+            } else {
+                resultsDiv.style.display = 'none'; // Hide the suggestions if there are no results
+            }
+        });
+});
+
+// Event listener for clicks anywhere on the page
+document.addEventListener('click', function(e) {
+    const resultsDiv = document.getElementById('autocomplete_results');
+    const searchInput = document.getElementById('search_input');
+    
+    // If the click is outside the results div or the search input, hide the autocomplete results
+    if (!resultsDiv.contains(e.target) && !searchInput.contains(e.target)) {
+        resultsDiv.style.display = 'none'; 
+    }
+});
+</script>
+{% endblock %}
