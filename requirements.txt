@@ -1,0 +1,18 @@
+# Core Web Framework
+Django>=4.0,<5.0
+
+# Data Science Tools
+pandas>=1.5
+numpy>=1.22
+scikit-learn>=1.2
+tabulate>=0.8
+
+# For Environment Variable Management
+python-dotenv>=1.0
+
+# For WSGI HTTP server (e.g., Gunicorn for Heroku/Render)
+gunicorn>=20.1.0
+
+# For static files handling in production
+whitenoise>=6.0.0
+
