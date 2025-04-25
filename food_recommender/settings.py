@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-*&1ho75=js2y3r$w4^)gz9o%irsbbx^joo(e#%4o$=4fv(7%&_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['https://food-recommender-vqtg.onrender.com']
+ALLOWED_HOSTS = ['food-recommender-vqtg.onrender.com']
 
 # Application definition
 
