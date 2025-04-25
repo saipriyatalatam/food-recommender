@@ -1,93 +1,167 @@
 {% extends 'base.html' %}
-{% block title %}Advanced Search for {{ selected_food.food_name }}{% endblock %}
+{% block title %}Recommendations for {{ selected_food.food_name }}{% endblock %}
 {% block content %}
 <div class="card shadow-sm p-4">
     <h2 class="mb-4">Recommendations for {{ selected_food.food_name }}</h2>
-    <ul class="list-group mt-2">
-        {% for rec in recommendations %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>{{ rec.food_name }}</span>
-                <div class="rating-slider-container">
-                    <input type="range" min="0" max="5" step="0.5" value="0" class="rating-slider" data-food-id="{{ rec.id }}" onchange="submitRating(this)">
-                    <span class="rating-value">0</span>
-                </div>
-            </li>
-        {% endfor %}
-    </ul>
+
+    <!-- Suggestions container -->
+    <div id="suggestions-container">
+        <!-- Initial suggestion -->
+        <div class="suggestion-block mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5>Suggestion {{ current_rank }}</h5>
+            </div>
+            <ul class="list-group mt-2">
+                {% for rec in recommendations %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center" data-food-id="{{ rec.id }}">
+                        <span>{{ rec.food_name }}</span>
+                        <div class="rating-slider-container">
+                            <input type="range" min="0" max="5" step="0.5" value="2.5" 
+                                   class="rating-slider" data-food-id="{{ rec.id }}" 
+                                   data-recommendation-id="{{ recommendation_id }}"
+                                   onchange="submitRating(this)">
+                            <span class="rating-value">2.5</span>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Alternate Suggestions Button -->
+    <div class="mt-4">
+        <button id="alternateBtn" class="btn btn-outline-primary w-100" 
+                onclick="getAlternateSuggestions()"
+                {% if current_rank >= max_alternates %}disabled{% endif %}>
+            Get Alternate Suggestions
+        </button>
+    </div>
 </div>
 
 <!-- Styling for the slide bar -->
 <style>
-.rating-slider-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.rating-slider {
-    width: 150px;
-    -webkit-appearance: none;
-    appearance: none;
-    height: 8px;
-    border-radius: 5px;
-    background: linear-gradient(to right, red 0%, yellow 60%, green 100%);
-    outline: none;
-}
-.rating-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #333;
-    cursor: pointer;
-}
-.rating-slider::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #333;
-    cursor: pointer;
-}
-.rating-value {
-    width: 30px;
-    text-align: right;
-}
+    .rating-slider-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .rating-slider {
+        width: 150px;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 8px;
+        border-radius: 5px;
+        background: linear-gradient(to right, red 0%, yellow 60%, green 100%);
+        outline: none;
+    }
+    .rating-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #333;
+        cursor: pointer;
+    }
+    .rating-slider::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #333;
+        cursor: pointer;
+    }
+    .rating-value {
+        width: 30px;
+        text-align: right;
+    }
+    .list-group-item.history-item {
+        background-color: #f8f9fa;
+    }
 </style>
 
 <script>
-    // This function submits the rating whenever the slider is changed
-function submitRating(slider) {
-    const rating = slider.value;
-    const foodId = slider.getAttribute('data-food-id');
-    const recommendationId = "{{ recommendation_id }}"; // Will be passed from view
-    const ratingValueSpan = slider.nextElementSibling;
-    ratingValueSpan.textContent = rating;
+    function submitRating(slider) {
+        const foodId = slider.getAttribute('data-food-id');
+        const recommendationId = slider.getAttribute('data-recommendation-id');
+        const rating = slider.value;
+        slider.nextElementSibling.textContent = rating;
 
-    // Send rating to backend
-    fetch('/submit_rating/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: JSON.stringify({
-            recommendation_id: recommendationId,
-            food_id: foodId,
-            rating: rating
+        // Send rating to backend via AJAX
+        fetch('/submit_rating/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                recommendation_id: recommendationId,
+                food_id: foodId,
+                rating: rating
+            })
         })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status !== 'success') {
-            alert('Failed to submit rating.');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error submitting rating.');
-    });
-}
+        .then(response => response.json())
+        .then(data => {
+            if (data.status !== 'success') {
+                console.error('Error saving rating:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+    
+    function getAlternateSuggestions() {
+        const foodName = "{{ selected_food.food_name }}";
+        const container = document.getElementById('suggestions-container');
+
+        fetch(`/recommendations/${foodName}/alternate/`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Create new suggestion block
+                const newBlock = document.createElement('div');
+                newBlock.className = 'suggestion-block mb-4';
+                newBlock.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5>Suggestion ${data.current_rank}</h5>
+                    </div>
+                    <ul class="list-group mt-2">
+                        ${data.recommendations.map(rec => `
+                            <li class="list-group-item d-flex justify-content-between align-items-center" data-food-id="${rec.id}">
+                                <span>${rec.food_name}</span>
+                                <div class="rating-slider-container">
+                                    <input type="range" min="0" max="5" step="0.5" value="2.5" 
+                                           class="rating-slider" data-food-id="${rec.id}" 
+                                           data-recommendation-id="${data.recommendation_id}"
+                                           onchange="submitRating(this)">
+                                    <span class="rating-value">2.5</span>
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+
+                // Append new suggestion to container
+                container.appendChild(newBlock);
+
+                // Disable button if max alternates reached after 3 times
+                if (data.current_rank >= data.max_alternates) {
+                    document.getElementById('alternateBtn').disabled = true;
+                }
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error getting alternate suggestions.');
+        });
+    }
 </script>
 {% endblock %}
-
-<!-- --working -->
