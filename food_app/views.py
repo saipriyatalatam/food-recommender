@@ -44,7 +44,6 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
-#Default home view
 @login_required
 def home_view(request):
     food_groups = FoodItem.objects.values('food_group').distinct()
@@ -121,57 +120,70 @@ def search_results(request):
     return render(request, 'search_results.html', {'food_items': food_items, 'query': query})
 
 
-#Recommendation page of the three recommendations
 @login_required
 def recommendations_view(request, food_name):
-    
     selected_food = FoodItem.objects.get(food_name=food_name)
-    # Get recommendations using recommendation function
+    # Get recommendations
     result = get_recommendations(food_name, selected_features=settings.SELECTED_FEATURES)
+    recommendations_data = result.get('recommendations', [])
     
-    # The 'best' recommendation comes in a specific format - let's check if it's valid
-    best = result.get('best_recommendation', [])
-    if not best or len(best[0]) < 5:
+    if not recommendations_data or not recommendations_data[0].get('top_subsets'):
         messages.error(request, 'No valid recommendations found.')
         return redirect('home')
 
-    # Extract just the food names from the recommendation result
-    recommended_names = best[0][2:5]
+    # Extract top subsets
+    top_subsets = recommendations_data[0]['top_subsets']
+    
+    # Initialize session for tracking current subset
+    request.session['current_rank'] = 1
+    request.session['food_name'] = food_name
+    request.session['top_subsets'] = [
+        {
+            'subset': subset['subset'][1:],  # Exclude "Subset X" label
+            'ed_score': subset['ed_score'],
+            'diversity_score': subset['diversity_score'],
+            'cost_score': subset['cost_score'],
+            'relevance_score': subset['relevance_score']
+        }
+        for subset in top_subsets
+    ]
+
+    # Get the first subset (rank 1)
+    current_subset = top_subsets[0]['subset'][1:]  # Exclude "Subset X" label
     recommendations = []
     
-    # Try to find each recommended food in our database
-    for name in recommended_names:
+    # Fetch FoodItem objects for the recommended foods
+    for name in current_subset:
         try:
             food = FoodItem.objects.get(food_name=name)
             recommendations.append(food)
         except FoodItem.DoesNotExist:
-            # Skip if we can't find one of the recommended items
             continue
 
-    # If we ended up with no valid recommendations, tell the user
     if not recommendations:
-        messages.error(request, 'No recommendations available.')
+        messages.error(request, 'No valid recommendations available.')
         return redirect('home')
 
-    # Save this recommendation to the user's history
+    # Save to RecommendationHistory
     recommendation_history = RecommendationHistory.objects.create(
         user=request.user,
         selected_food=selected_food,
-        recommended_food_1=recommendations[0] if len(recommendations) >=1 else None,
-        recommended_food_2=recommendations[1] if len(recommendations) >=2 else None,
-        recommended_food_3=recommendations[2] if len(recommendations) >=3 else None,
+        recommended_food_1=recommendations[0] if len(recommendations) >= 1 else None,
+        recommended_food_2=recommendations[1] if len(recommendations) >= 2 else None,
+        recommended_food_3=recommendations[2] if len(recommendations) >= 3 else None,
     )
 
     return render(request, 'recommendations.html', {
         'selected_food': selected_food,
         'recommendations': recommendations,
         'recommendation_id': recommendation_history.id,
+        'current_rank': request.session['current_rank'],
+        'max_alternates': 4,
     })
 
 
-#Submit Ratings - Validate and submit the ratings
 @login_required
-@csrf_exempt  # JSON API, no CSRF needed
+@csrf_exempt
 def submit_rating(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST request required'}, status=405)
@@ -191,6 +203,7 @@ def submit_rating(request):
         recommendation = get_object_or_404(RecommendationHistory, id=recommendation_id, user=request.user)
         food = get_object_or_404(FoodItem, id=food_id)
 
+        # Update the appropriate rating field
         if food == recommendation.recommended_food_1:
             recommendation.rating_1 = rating
         elif food == recommendation.recommended_food_2:
@@ -203,5 +216,74 @@ def submit_rating(request):
         recommendation.save()
         return JsonResponse({'status': 'success'})
 
-    except Exception:
-        return JsonResponse({'error': 'Invalid request'}, status=400)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except FoodItem.DoesNotExist:
+        return JsonResponse({'error': 'Food item not found'}, status=400)
+    except RecommendationHistory.DoesNotExist:
+        return JsonResponse({'error': 'Recommendation not found'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'Invalid request: {str(e)}'}, status=400)
+
+
+@login_required
+def alternate_recommendations_view(request, food_name):
+    current_rank = request.session.get('current_rank', 1)
+    top_subsets = request.session.get('top_subsets', [])
+    
+    if current_rank >= 4 or not top_subsets:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'No more alternate suggestions available.'
+        }, status=400)
+
+    # Increment rank
+    next_rank = current_rank + 1
+    request.session['current_rank'] = next_rank
+
+    # Get the next subset
+    next_subset = top_subsets[next_rank - 1]['subset']  # Subsets are 0-indexed
+    recommendations = []
+    
+    try:
+        selected_food = FoodItem.objects.get(food_name=food_name)
+    except FoodItem.DoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Selected food not found.'
+        }, status=400)
+
+    # Fetch FoodItem objects
+    for name in next_subset:
+        try:
+            food = FoodItem.objects.get(food_name=name)
+            recommendations.append({
+                'id': food.id,
+                'food_name': food.food_name
+            })
+        except FoodItem.DoesNotExist:
+            continue
+
+    if not recommendations:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'No valid recommendations available.'
+        }, status=400)
+
+    # Save to RecommendationHistory
+    food_objects = [FoodItem.objects.get(id=rec['id']) for rec in recommendations]
+    recommendation_history = RecommendationHistory.objects.create(
+        user=request.user,
+        selected_food=selected_food,
+        recommended_food_1=food_objects[0] if len(food_objects) >= 1 else None,
+        recommended_food_2=food_objects[1] if len(food_objects) >= 2 else None,
+        recommended_food_3=food_objects[2] if len(food_objects) >= 3 else None,
+    )
+
+    return JsonResponse({
+        'status': 'success',
+        'recommendations': recommendations,
+        'current_rank': next_rank,
+        'recommendation_id': recommendation_history.id,
+        'max_alternates': 4
+    })
