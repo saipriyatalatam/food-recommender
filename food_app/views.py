@@ -126,7 +126,7 @@ def recommendations_view(request, food_name):
     # Get recommendations
     result = get_recommendations(food_name, selected_features=settings.SELECTED_FEATURES)
     recommendations_data = result.get('recommendations', [])
-    
+    # print(recommendations_data,"rrrrr")
     if not recommendations_data or not recommendations_data[0].get('top_subsets'):
         messages.error(request, 'No valid recommendations found.')
         return redirect('home')
@@ -178,7 +178,7 @@ def recommendations_view(request, food_name):
         'recommendations': recommendations,
         'recommendation_id': recommendation_history.id,
         'current_rank': request.session['current_rank'],
-        'max_alternates': 4,
+        'max_alternates': 2,
     })
 
 
@@ -231,7 +231,7 @@ def alternate_recommendations_view(request, food_name):
     current_rank = request.session.get('current_rank', 1)
     top_subsets = request.session.get('top_subsets', [])
     
-    if current_rank >= 4 or not top_subsets:
+    if current_rank >= 2 or not top_subsets:
         return JsonResponse({
             'status': 'error',
             'message': 'No more alternate suggestions available.'
@@ -285,5 +285,5 @@ def alternate_recommendations_view(request, food_name):
         'recommendations': recommendations,
         'current_rank': next_rank,
         'recommendation_id': recommendation_history.id,
-        'max_alternates': 4
+        'max_alternates': 2
     })
