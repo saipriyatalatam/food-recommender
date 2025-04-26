@@ -16,3 +16,6 @@ gunicorn>=20.1.0
 # For static files handling in production
 whitenoise>=6.0.0
 
+dj-database-url
+psycopg[binary]
+
