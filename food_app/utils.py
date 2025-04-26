@@ -58,7 +58,7 @@ def load_csv_to_db(csv_path):
 
     #Extract the data and load to DB
     for _, row in df.iterrows():
-        print(row['code'])
+        # print(row['code'])
         FoodItem.objects.update_or_create(
             code=row['code'],
             food_name=row['FoodName'],
@@ -262,8 +262,16 @@ def get_recommendations(input_food, selected_features=settings.SELECTED_FEATURES
         return recommendations
 
     top_10_recommendations = recommend_foods(df, similarity_matrix, top_n=top_n)
+    # print(top_10_recommendations)
     top_10_dict = {row[0]: row[1].split("; ") for row in top_10_recommendations}
-
+    j=0
+    # print(top_10_dict.keys)
+    
+    for i in top_10_dict.keys():
+        if i == input_food:
+            top_10 = top_10_dict[i]
+            print(top_10)
+            break
     # Step 3: Create 3-food subsets for the input food
     if input_food not in top_10_dict:
         raise ValueError(f"'{input_food}' not found or no valid recommendations.")
@@ -313,13 +321,13 @@ def get_recommendations(input_food, selected_features=settings.SELECTED_FEATURES
             relevance_scores.append(relevance_score)
 
                 # Step 5: Select top 4 subsets based on relevance scores
-        print(relevance_scores)
+        # print(relevance_scores)
         sorted_indices = np.argsort(relevance_scores)  # Returns indices from best to worst
-        print("sorted_indices", sorted_indices)
+        # print("sorted_indices", sorted_indices)
 
         # Get top 4 subsets (or fewer if there aren't 4 available)
         top_subsets = []
-        for i in range(min(4, len(sorted_indices))):  # Ensure we don't exceed available subsets
+        for i in range(1):  # Ensure we don't exceed available subsets
             idx = sorted_indices[i]
             top_subsets.append({
                 'rank': i + 1,  # 1st, 2nd, 3rd, 4th
@@ -329,7 +337,29 @@ def get_recommendations(input_food, selected_features=settings.SELECTED_FEATURES
                 'cost_score': cost_results[idx],
                 'relevance_score': relevance_scores[idx]
             })
+            # print(top_subsets)
+            break  #Breaking the loop as we just only need one main 3 suggestions, next suggestions will be selected from other 7
+        
+        best_subset_foods = subsets[idx][1:4]  # Extract the 3 foods from best_subset (excluding subset name)
+        # print("all 10", top_10)
+        # print(best_subset_foods)
+        remaining_foods = [food for food in top_10 if food not in best_subset_foods]  # Remove best_subset foods
 
+        if len(remaining_foods) >= 3:
+            random_foods = random.sample(remaining_foods, 4)  # Select 3 random foods from remaining
+        else:
+            raise ValueError(f"Not enough remaining foods after removing best subset for '{input_food}' to select 3 random foods.")
+        
+        top_subsets.append({
+                'rank': 2,  # 1st, 2nd, 3rd, 4th
+                'subset': random_foods,
+                'ed_score': ed_results[0],
+                'diversity_score': diversity_results[0],
+                'cost_score': cost_results[0],
+                'relevance_score': relevance_scores[0]
+            })
+
+        # print(top_subsets)
         # Store all top recommendations
         best_recommendations.append({
             'food_item': food_item,
