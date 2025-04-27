@@ -79,8 +79,7 @@ WSGI_APPLICATION = 'food_recommender.wsgi.application'
 DATABASES = {
     'default': dj_database_url.parse(
         "postgres://bindu_3zng_user:PFxu2jtRsp6hBaha2PpHSzJD0RrJqJqP@dpg-d06as0ruibrs73ed7e30-a/bindu_3zng",
-        conn_max_age=600
-    ),
+        conn_max_age=600),
 }
 
 # Password validation
