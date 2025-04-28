@@ -4,7 +4,6 @@ import csv
 from django.http import HttpResponse
 # Register your models here.
 admin.site.register(FoodItem)
-admin.site.register(RecommendationHistory)
 
 
 @admin.register(RecommendationHistory)
