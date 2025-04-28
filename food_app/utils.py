@@ -51,8 +51,11 @@ def preprocess_data(data):
 #Load the processed data to DB
 def load_csv_to_db(csv_path):
     df = pd.read_csv(csv_path)
+
     df = df.drop_duplicates().reset_index(drop=True)
     df = preprocess_data(df)  #Calling the preprocessing function
+    print(df)
+    df.to_csv("temp.csv")
     df = df[df['code']!=0]  
     print(df.columns)
 
@@ -64,76 +67,76 @@ def load_csv_to_db(csv_path):
             food_name=row['FoodName'],
             food_group=row['Food Group'],
             defaults={
-                'doh25': row.get('25-OH-D3 [ug]'),
-                'crypxb': row.get('?-Cryptoxanthin [ug]'),
-                'ala': row.get('Alanine [g]'),
-                'al': row.get('Aluminium (Al) [mg]'),
-                'apigen': row.get('Apigenin [mg]'),
-                'apigen7onshps': row.get('Apigenin-7-O-neohesperidoside [mg]'),
-                'f20d0': row.get('Arachidic (C20:0) [mg]'),
-                'arg': row.get('Arginine [g]'),
-                'as_1': row.get('Arsenic (As) [ug]'),
-                'f22d0': row.get('Behenic (C22:0) [mg]'),
-                'cd': row.get('Cadmium (Cd) [mg]'),
+                'doh25': row.get('25-OH-D3 [ug]|doh25|FAT SOLUBLE VITAMINS'),
+                'crypxb': row.get('?-Cryptoxanthin [ug]|crypxb|CAROTENOIDS'),
+                'ala': row.get('Phenylalanine [g]|phe|AMINO ACID PROFILE'),
+                'al': row.get('Aluminium (Al) [mg]|al|MINERALS AND TRACE ELEMENTS'),
+                'apigen': row.get('Apigenin [mg]|apigen|POLYPHENOLS'),
+                'apigen7onshps': row.get('Apigenin-7-O-neohesperidoside [mg]|apigen7onshps|POLYPHENOLS'),
+                'f20d0': row.get('Arachidic (C20:0) [mg]|f20d0|FATTY ACID PROFILE'),
+                'arg': row.get('Arginine [g]|arg|AMINO ACID PROFILE'),
+                'as_1': row.get('Arsenic (As) [ug]|as|MINERALS AND TRACE ELEMENTS'),
+                'f22d0': row.get('Behenic (C22:0) [mg]|f22d0|FATTY ACID PROFILE'),
+                'cd': row.get('Cadmium (Cd) [mg]|cd|MINERALS AND TRACE ELEMENTS'),
                 'carbs': row.get('Carbs'),
-                'cholc': row.get('Cholesterol [mg]'),
-                'co': row.get('Cobalt (Co) [mg]'),
-                'f22d5n3': row.get('Docosa pentaenoic (C22:5n3) [mg]'),
-                'f20d1_n9f': row.get('Eicosaenoic (C20:1n9) [mg]'),
-                'f20d3n6': row.get('Eicosatrienoic (C20:3n6) [mg]'),
-                'enerc': row.get('Energy [kJ]'),
-                'fumac': row.get('Fumaric Acid [mg]'),
-                'gallac': row.get('Gallic acid [mg]'),
-                'glus': row.get('Glucose [g]'),
-                'glu': row.get('Glutamic Acid [g]'),
-                'gly': row.get('Glycine [g]'),
-                'his': row.get('Histidine [g]'),
-                'fe': row.get('Iron (Fe) [mg]'),
-                'ile': row.get('Isoleucine [g]'),
-                'f12d0': row.get('Lauric (C12:0) [mg]'),
-                'pb': row.get('Lead (Pb) [mg]'),
-                'tf18d2cn6': row.get('Linoleic (C18:2n6) [%]'),
-                'f18d2cn6': row.get('Linoleic (C18:2n6) [mg]'),
-                'li': row.get('Lithium (Li) [mg]'),
-                'malac': row.get('Malic Acid [mg]'),
-                'mn': row.get('Manganese (Mn) [mg]'),
-                'vitk2': row.get('Menaquinones (K2) [ug]'),
-                'hg': row.get('Mercury (Hg) [ug]'),
-                'met': row.get('Methionine [g]'),
-                'water': row.get('Moisture [g]'),
-                'mo': row.get('Molybdenum (Mo) [mg]'),
-                'f14d0': row.get('Myristic (C14:0) [mg]'),
-                'f24d1_c': row.get('Nervonic (C24:1n9) [mg]'),
-                'ni': row.get('Nickel (Ni) [mg]'),
-                'rafs': row.get('Oligosaccharides - Raffinose [g]'),
-                'oxals': row.get('Oxalate-Soluble [mg]'),
-                'tf16d0': row.get('Palmitic (C16:0) [%]'),
-                'f16d0': row.get('Palmitic (C16:0) [mg]'),
-                'tf16d1c': row.get('Palmitoleic (C16:1) [%]'),
-                'pantac': row.get('Pantothenic Acid (B5) [mg]'),
-                'f15d0': row.get('Pentadecanoic (C15:0) [mg]'),
-                'phe': row.get('Phenylalanine [g]'),
-                'p': row.get('Phophorus (P) [mg]'),
-                'camt': row.get('Phytosterols - Campesterol [mg]'),
+                'cholc': row.get('Cholesterol [mg]|cholc|FATTY ACID PROFILE'),
+                'co': row.get('Cobalt (Co) [mg]|co|MINERALS AND TRACE ELEMENTS'),
+                'f22d5n3': row.get('Docosa pentaenoic (C22:5n3) [mg]|f22d5n3|FATTY ACID PROFILE'),
+                'f20d1_n9f': row.get('Eicosaenoic (C20:1n9) [mg]|f20d1-n9f|FATTY ACID PROFILE'),
+                'f20d3n6': row.get('Eicosatrienoic (C20:3n6) [mg]|f20d3n6|FATTY ACID PROFILE'),
+                'enerc': row.get('Energy [kJ]|enerc|PROXIMATE PRINCIPLES AND DIETARY FIBRE'),
+                'fumac': row.get('Fumaric Acid [mg]|fumac|ORGANIC ACIDS'),
+                'gallac': row.get('Gallic acid [mg]|gallac|POLYPHENOLS'),
+                'glus': row.get('Glucose [g]|glus|STARCH AND INDIVIDUAL SUGARS'),
+                'glu': row.get('Glutamic Acid [g]|glu|AMINO ACID PROFILE'),
+                'gly': row.get('Glycine [g]|gly|AMINO ACID PROFILE'),
+                'his': row.get('Histidine [g]|his|AMINO ACID PROFILE'),
+                'fe': row.get('Iron (Fe) [mg]|fe|MINERALS AND TRACE ELEMENTS'),
+                'ile': row.get('Isoleucine [g]|ile|AMINO ACID PROFILE'),
+                'f12d0': row.get('Lauric (C12:0) [mg]|f12d0|FATTY ACID PROFILE'),
+                'pb': row.get('Lead (Pb) [mg]|pb|MINERALS AND TRACE ELEMENTS'),
+                'tf18d2cn6': row.get('Linoleic (C18:2n6) [%]|tf18d2cn6|FATTY ACID PROFILE OF EDIBLE OILS AND FATS'),
+                'f18d2cn6': row.get('Linoleic (C18:2n6) [mg]|f18d2cn6|FATTY ACID PROFILE'),
+                'li': row.get('Lithium (Li) [mg]|li|MINERALS AND TRACE ELEMENTS'),
+                'malac': row.get('Malic Acid [mg]|malac|ORGANIC ACIDS'),
+                'mn': row.get('Manganese (Mn) [mg]|mn|MINERALS AND TRACE ELEMENTS'),
+                'vitk2': row.get('Menaquinones (K2) [ug]|vitk2|FAT SOLUBLE VITAMINS'),
+                'hg': row.get('Mercury (Hg) [ug]|hg|MINERALS AND TRACE ELEMENTS'),
+                'met': row.get('Methionine [g]|met|AMINO ACID PROFILE'),
+                'water': row.get('Moisture [g]|water|PROXIMATE PRINCIPLES AND DIETARY FIBRE'),
+                'mo': row.get('Molybdenum (Mo) [mg]|mo|MINERALS AND TRACE ELEMENTS'),
+                'f14d0': row.get('Myristic (C14:0) [mg]|f14d0|FATTY ACID PROFILE'),
+                'f24d1_c': row.get('Nervonic (C24:1n9) [mg]|f24d1-c|FATTY ACID PROFILE'),
+                'ni': row.get('Nickel (Ni) [mg]|ni|MINERALS AND TRACE ELEMENTS'),
+                'rafs': row.get('Oligosaccharides - Raffinose [g]|rafs|OLIGOSACCHARIDES, PHYTOSTEROLS, PHYTATES AND SAPONINS'),
+                'oxals': row.get('Oxalate-Soluble [mg]|oxals|ORGANIC ACIDS'),
+                'tf16d0': row.get('Palmitic (C16:0) [%]|tf16d0|FATTY ACID PROFILE OF EDIBLE OILS AND FATS'),
+                'f16d0': row.get('Palmitic (C16:0) [mg]|f16d0|FATTY ACID PROFILE'),
+                'tf16d1c': row.get('Palmitoleic (C16:1) [%]|tf16d1c|FATTY ACID PROFILE OF EDIBLE OILS AND FATS'),
+                'pantac': row.get('Pantothenic Acid (B5) [mg]|pantac|WATER SOLUBLE VITAMINS'),
+                'f15d0': row.get('Pentadecanoic (C15:0) [mg]|f15d0|FATTY ACID PROFILE'),
+                'phe': row.get('Phenylalanine [g]|phe|AMINO ACID PROFILE'),
+                'p': row.get('Phophorus (P) [mg]|p|MINERALS AND TRACE ELEMENTS'),
+                'camt': row.get('Phytosterols - Campesterol [mg]|camt|OLIGOSACCHARIDES, PHYTOSTEROLS, PHYTATES AND SAPONINS'),
                 'proteins': row.get('Proteins'),
-                'pcathac': row.get('Protocatechuic acid [mg]'),
-                'querce3ortns': row.get('Quercetin-3-O-rutinoside [mg]'),
-                'retol': row.get('Retinol [ug]'),
-                'ribf': row.get('Riboflavin (B2) [mg]'),
-                'sucs': row.get('Sucrose [g]'),
-                'thia': row.get('Thiamine(B1) [mg]'),
-                'thr': row.get('Threonine [g]'),
-                'tocpha': row.get('Tocopherols (Alpha) [mg]'),
-                'tocphb': row.get('Tocopherols (Beta) [mg]'),
-                'toctrb': row.get('Tocotrienols (Beta) [mg]'),
-                'cho': row.get('Total Available CHO [g]'),
-                'cartoid': row.get('Total Carotenoids [ug]'),
-                'folsum': row.get('Total Folates (B9) [ug]'),
-                'fapu': row.get('Total Poly Unsaturated Fatty Acids (TPUFA) [mg]'),
-                'fasat': row.get('Total Saturated Fatty Acids (TSFA) [mg]'),
-                'starch': row.get('Total Starch [g]'),
-                'trp': row.get('Tryptophan [g]'),
-                'zn': row.get('Zinc (Zn) [mg]'),
+                'pcathac': row.get('Protocatechuic acid [mg]|pcathac|POLYPHENOLS'),
+                'querce3ortns': row.get('Quercetin-3-O-rutinoside [mg]|querce3ortns|POLYPHENOLS'),
+                'retol': row.get('Retinol [ug]|retol|FAT SOLUBLE VITAMINS'),
+                'ribf': row.get('Riboflavin (B2) [mg]|ribf|WATER SOLUBLE VITAMINS'),
+                'sucs': row.get('Sucrose [g]|sucs|STARCH AND INDIVIDUAL SUGARS'),
+                'thia': row.get('Thiamine(B1) [mg]|thia|WATER SOLUBLE VITAMINS'),
+                'thr': row.get('Threonine [g]|thr|AMINO ACID PROFILE'),
+                'tocpha': row.get('Tocopherols (Alpha) [mg]|tocpha|FAT SOLUBLE VITAMINS'),
+                'tocphb': row.get('Tocopherols (Beta) [mg]|tocphb|FAT SOLUBLE VITAMINS'),
+                'toctrb': row.get('Tocotrienols (Beta) [mg]|toctrb|FAT SOLUBLE VITAMINS'),
+                'cho': row.get('Total Available CHO [g]|cho|STARCH AND INDIVIDUAL SUGARS'),
+                'cartoid': row.get('Total Carotenoids [ug]|cartoid|CAROTENOIDS'),
+                'folsum': row.get('Total Folates (B9) [ug]|folsum|WATER SOLUBLE VITAMINS'),
+                'fapu': row.get('Total Poly Unsaturated Fatty Acids (TPUFA) [mg]|fapu|FATTY ACID PROFILE'),
+                'fasat': row.get('Total Saturated Fatty Acids (TSFA) [mg]|fasat|FATTY ACID PROFILE'),
+                'starch': row.get('Total Starch [g]|starch|STARCH AND INDIVIDUAL SUGARS'),
+                'trp': row.get('Tryptophan [g]|trp|AMINO ACID PROFILE'),
+                'zn': row.get('Zinc (Zn) [mg]|zn|MINERALS AND TRACE ELEMENTS'),
                 'estimated_price': row.get('Estimated Price (INR per kg/liter)'),
             }
         )
@@ -232,20 +235,19 @@ def get_recommendations(input_food, selected_features=settings.SELECTED_FEATURES
         }
         data.append(row)
     df = pd.DataFrame(data)
-
+    df.to_csv('temp2.csv')
     # Step 1: Compute similarity matrix using only selected 70 features
     global SIMILARITY_MATRIX
     if SIMILARITY_MATRIX is None:
         nutrient_vectors = df[selected_features].values
         SIMILARITY_MATRIX = cdist(nutrient_vectors, nutrient_vectors, metric='euclidean')
     similarity_matrix = SIMILARITY_MATRIX
+    print(len(similarity_matrix))
 
     # Step 2: Recommend foods (excluding those with same starting name word)
     def recommend_foods(df, similarity_matrix, top_n):
         recommendations = []
         for i, food_name in enumerate(df['FoodName']):
-            if i>=similarity_matrix.shape[0]:
-                break
             food_first_word = str(food_name).split()[0].lower()
             similar_indices = np.argsort(similarity_matrix[i])
             substitutes = []
