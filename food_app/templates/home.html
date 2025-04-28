@@ -108,7 +108,10 @@ document.addEventListener('click', function(e) {
 </script>
 
 <div class="alert alert-info mb-4" role="alert">
-    Details about Food Items available in this Recommendation System can be viewed at IFCT(short ver) and IFCT(long ver).
+    Details about Food Items available in this Recommendation System can be viewed at
+    <a href="{% static 'food_app/pdfs/IFCT_short.pdf' %}" target="_blank">IFCT(short ver)</a>
+    and
+    <a href="{% static 'food_app/pdfs/IFCT_long.pdf' %}" target="_blank">IFCT(long ver)</a>.
 </div>
 
 {% endblock %}
