@@ -248,6 +248,8 @@ def get_recommendations(input_food, selected_features=settings.SELECTED_FEATURES
     def recommend_foods(df, similarity_matrix, top_n):
         recommendations = []
         for i, food_name in enumerate(df['FoodName']):
+            if i>=similarity_matrix.shape[0]:
+                 break
             food_first_word = str(food_name).split()[0].lower()
             similar_indices = np.argsort(similarity_matrix[i])
             substitutes = []
