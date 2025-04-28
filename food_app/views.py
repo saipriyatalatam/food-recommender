@@ -196,8 +196,8 @@ def submit_rating(request):
         rating = float(data.get('rating'))
 
         # Check rating is valid
-        if not 0 <= rating <= 5:
-            return JsonResponse({'error': 'Rating must be between 0 and 5'}, status=400)
+        if not 0 <= rating <= 10:
+            return JsonResponse({'error': 'Rating must be between 0 and 10'}, status=400)
 
         # Fetch recommendation and food
         recommendation = get_object_or_404(RecommendationHistory, id=recommendation_id, user=request.user)
