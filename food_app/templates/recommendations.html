@@ -29,8 +29,10 @@
     </div>
 
     <!-- Alternate Suggestions Button -->
-    <div class="mt-4">
-        <button id="alternateBtn" class="btn btn-outline-primary w-100" 
+    <!-- Buttons container -->
+    <div class="mt-4 d-flex gap-2">
+        <a href="/" class="btn btn-outline-primary w-50">Back to Home</a>
+        <button id="alternateBtn" class="btn btn-outline-primary w-50" 
                 onclick="getAlternateSuggestions()"
                 {% if current_rank >= max_alternates %}disabled{% endif %}>
             Get Alternate Suggestions
